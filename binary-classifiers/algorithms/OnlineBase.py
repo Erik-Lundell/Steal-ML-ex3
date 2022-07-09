@@ -97,6 +97,10 @@ class OnlineBase(object):
             return rv_gen(length)
 
     def query(self, x, count=True):
+
+        #If needed, reshape x to fit predict method
+        if (np.ndim(x) == 1):
+            x = np.reshape(x,(1,-1))
         if count:
             self.q += 1
             if self.q > 0 and self.q % 100 == 0:

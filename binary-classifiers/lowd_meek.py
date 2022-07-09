@@ -44,6 +44,7 @@ class LordMeek(OnlineBase):
         x_n_found = False
         x_p_found = False
         for d in self.X_test:
+        
             if x_n_found and x_p_found:
                 break
 
@@ -53,6 +54,7 @@ class LordMeek(OnlineBase):
             elif self.query(d) == self.NEG and (not x_n_found):
                 x_n = d
                 x_n_found = True
+
         return x_p, x_n
 
     def find_witness(self):
@@ -63,7 +65,7 @@ class LordMeek(OnlineBase):
         assert dim == len(x_n)
 
         last_p = -1
-        for i in xrange(0, dim):
+        for i in range(0, dim):
             # record the old value
             last_x_p_i = x_p[i]
             # change the value
@@ -135,7 +137,7 @@ class LordMeek(OnlineBase):
         u = np.zeros(len(x0))
         w = np.zeros(len(x0))  # target
         w[f] = w_f
-        for i in xrange(0, len(x0)):
+        for i in range(0, len(x0)):
             if i == f:
                 continue
             # unit vector along the ith dimension
@@ -158,6 +160,7 @@ class LordMeek(OnlineBase):
         error_clf = 0.0
         error_lrn = 0.0
         for test_x, test_y in zip(self.X_test, self.y_test):
+            test_x = np.reshape(test_x,(1,-1))
             t = 1 if np.inner(w, test_x) + b > 0 else self.NEG
             if t != test_y:
                 error_lrn += 1
@@ -174,8 +177,8 @@ class LordMeek(OnlineBase):
 if __name__ == '__main__':
 
     #Load test_data. 
-    X_train, y_train = load_svmlight_file('/targets/diabetes/test.scale', n_features=8)
-    X_test, y_test = load_svmlight_file('/targets/diabetes/test.scale', n_features=8)
+    X_train, y_train = load_svmlight_file('targets/targets/diabetes/test.scale', n_features=8)
+    X_test, y_test = load_svmlight_file('targets/targets/diabetes/test.scale', n_features=8)
     X_train = X_train.todense().tolist()
     X_test  = X_test.todense().tolist()
 
@@ -188,6 +191,7 @@ if __name__ == '__main__':
     for e in deltas:
         delta = 1.0 / 10000
         print ('error bound=%f' % e)
+
         ex = LordMeek(clf, (X_test, y_test), error=e, delta=delta)
         ex.do()
         print ('nq=%d' % (ex.get_n_query()))
