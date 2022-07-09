@@ -1,0 +1,44 @@
+{
+    "version": "1.0",
+    "targetAttributeName": "label",
+    "dataFormat": "CSV",
+    "dataFileContainsHeader": false,
+    "attributes": [
+        {
+            "attributeName": "label",
+            "attributeType": "BINARY"
+        },
+        {
+            "attributeName": "x1",
+            "attributeType": "NUMERIC"
+        },
+        {
+            "attributeName": "x2",
+            "attributeType": "NUMERIC"
+        },
+        {
+            "attributeName": "x3",
+            "attributeType": "NUMERIC"
+        },
+        {
+            "attributeName": "x4",
+            "attributeType": "NUMERIC"
+        },
+        {
+            "attributeName": "x5",
+            "attributeType": "NUMERIC"
+        },
+        {
+            "attributeName": "x6",
+            "attributeType": "NUMERIC"
+        },
+        {
+            "attributeName": "x7",
+            "attributeType": "NUMERIC"
+        },
+        {
+            "attributeName": "x8",
+            "attributeType": "NUMERIC"
+        }
+    ]
+}

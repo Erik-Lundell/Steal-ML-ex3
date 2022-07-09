@@ -1,0 +1,20 @@
+{
+    "version": "1.0",
+    "targetAttributeName": "label",
+    "dataFormat": "CSV",
+    "dataFileContainsHeader": false,
+    "attributes": [
+        {
+            "attributeName": "label",
+            "attributeType": "BINARY"
+        },
+        {
+            "attributeName": "x1",
+            "attributeType": "NUMERIC"
+        },
+        {
+            "attributeName": "x2",
+            "attributeType": "NUMERIC"
+        }
+    ]
+}

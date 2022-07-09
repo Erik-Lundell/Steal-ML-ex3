@@ -8,7 +8,6 @@ https://www.overleaf.com/2417823636pmwbvrkvccnp
 * Set up virtual environment in binary-classifiers folder: python -m venv env
 * Install dependencies: python -m pip install -r requirements.txt
 * Activate environment: .env\Scripts\activate
-* Extract target folder
 
 
 ## ToDos
