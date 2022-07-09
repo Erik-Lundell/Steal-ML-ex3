@@ -9,7 +9,7 @@ import sys
 import os
 
 import matplotlib as mpl
-mpl.use('Agg')
+#mpl.use('Agg')
 from collections import deque
 
 
@@ -153,7 +153,7 @@ class OnlineBase(object):
             m = sys.maxint
         pts_near_b_in_x = []
         pts_near_b_in_x_label = []
-        for i in xrange(0, m):
+        for i in range(0, m):
             try:
                 # get a pair with different labels
                 x1 = self.random_vector(self.n_features, self.NEG, None)

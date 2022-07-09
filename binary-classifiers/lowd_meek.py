@@ -1,9 +1,6 @@
 __author__ = 'Fan'
 
 import os
-script_path = os.path.abspath( __file__ )
-print( script_path )
-
 import copy
 import logging
 
@@ -11,6 +8,8 @@ import numpy as np
 
 from sklearn import svm
 from sklearn.datasets import load_svmlight_file
+
+import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -176,22 +175,30 @@ class LordMeek(OnlineBase):
 
 if __name__ == '__main__':
 
-    #Load test_data. 
+    #Load training data and train black box model
     X_train, y_train = load_svmlight_file('targets/targets/diabetes/test.scale', n_features=8)
-    X_test, y_test = load_svmlight_file('targets/targets/diabetes/test.scale', n_features=8)
     X_train = X_train.todense().tolist()
-    X_test  = X_test.todense().tolist()
-
-    # Train the model to extract
     clf = svm.LinearSVC()
     clf.fit(X_train, y_train)
-
     n_features = len(X_train[0])
+
+    # Perform Lowd-Meek
+    X_test, y_test = load_svmlight_file('targets/targets/diabetes/test.scale', n_features=8)
+    X_test  = X_test.todense().tolist()
+
     deltas = (1, .1, .01, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7)
+    nq = []
     for e in deltas:
         delta = 1.0 / 10000
         print ('error bound=%f' % e)
 
         ex = LordMeek(clf, (X_test, y_test), error=e, delta=delta)
         ex.do()
+        
         print ('nq=%d' % (ex.get_n_query()))
+        nq.append(ex.get_n_query())
+
+    plt.plot(nq, deltas)
+    plt.yscale("log")
+
+    plt.show()
