@@ -172,12 +172,13 @@ class LordMeek(OnlineBase):
             if queried_y != test_y:
                 error_clf += 1
 
-        #R_test = fraction where extracted_y matches tested_y
-        #R_unif = sample from random input 
+        #R_test = fraction where extracted_y matches tested_y (definition from paper)
+        #R_unif = R_test but sample from random input vectors (definition from paper) 
         # Accuracy = 1-R
         pe_clf = 1 - error_clf/ len(self.y_test)
         pe_lrn = 1 - error_lrn/ len(self.y_test)
-
+        
+        #No idea what these metrics are...
         print ('L_test = %f' % max(pe_clf - pe_lrn, .0))
         print ('L_unif = %f' % (0.0,))
 
