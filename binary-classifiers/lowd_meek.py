@@ -3,6 +3,7 @@ __author__ = 'Fan'
 import os
 import copy
 import logging
+from select import select
 
 import numpy as np
 
@@ -120,57 +121,92 @@ class LordMeek(OnlineBase):
                 return b(new_x[i], init_xi)
 
             step *= 2
-
-    def do(self):
+    
+    def find_continous_weights(self):
         f, sp, sn = self.find_witness()
         sp_f = sp[f]
         sn_f = sn[f]
-
-        w_f = 1.0 * (sp_f - sn_f) / abs(sp_f - sn_f)
+        w_f = 1.0 * np.sign(sp_f - sn_f)
         x0, _ = self.push_to_b(sn, sp, self.e)
 
         # get a x1 with gap(x0,x1) = 1 & c(x1) = 0
         x1 = copy.copy(x0)
-        x1[f] -= w_f
+        x1[f] = x1[f] - w_f
 
-        u = np.zeros(len(x0))
         w = np.zeros(len(x0))  # target
         w[f] = w_f
         for i in range(0, len(x0)):
             if i == f:
                 continue
-            # unit vector along the ith dimension
+
+            # Saftey-check whether we can switch sign within our given delta. (otherwise, assume w_i = 0)
+            u = np.zeros(len(x0)) # unit vector
             u[i] = 1.0
             a = np.add(x1, u / self.delta)
             b = np.add(x1, -u / self.delta)
             if self.query(a) == self.query(b):
                 w[i] = 0
+
+            #Otherwise performe line search
             else:
                 logger.debug('Line search for dim %d', i)
                 new_x_i, err = self.line_search(x1, i)
                 w[i] = 1.0 / (new_x_i - x1[i])
-            u[i] = 0.0
 
+        #Return weights and dim f used in initial sign witness.
+        return w, f
+
+    def benchmark_old(self, w, f):
         b = self.clf1.intercept_ / self.clf1.coef_[0][f]
-        # print w, b
-        # print self.clf1.coef_ / self.clf1.coef_[0][f]
 
-        # test
-        error_clf = 0.0
+        error_clf = 0.0 
         error_lrn = 0.0
         for test_x, test_y in zip(self.X_test, self.y_test):
             test_x = np.reshape(test_x,(1,-1))
-            t = 1 if np.inner(w, test_x) + b > 0 else self.NEG
-            if t != test_y:
+
+            extracted_y = self.POS if np.inner(w, test_x) + b > 0 else self.NEG
+            queried_y = self.clf1.predict(test_x)
+            if extracted_y != test_y:
                 error_lrn += 1
-            if self.clf1.predict(test_x) != test_y:
+
+            if queried_y != test_y:
                 error_clf += 1
 
+        #R_test = fraction where extracted_y matches tested_y
+        #R_unif = sample from random input 
+        # Accuracy = 1-R
         pe_clf = 1 - error_clf/ len(self.y_test)
         pe_lrn = 1 - error_lrn/ len(self.y_test)
 
         print ('L_test = %f' % max(pe_clf - pe_lrn, .0))
         print ('L_unif = %f' % (0.0,))
+
+        return
+
+    def compare_weights(self, w):
+        classifier_w = np.reshape(self.clf1.coef_,(1,-1))
+
+        #normalize estimated so that the total length is same as classifier weights
+        #For classifying, scaling does not matter
+        w_norm = w*np.sqrt(np.inner(classifier_w,classifier_w)) / np.sqrt(np.inner(w,w))
+
+        fraction = np.maximum(classifier_w/w_norm, w_norm/classifier_w)
+        fraction = [i[0] for i in fraction]
+        print(f"Fraction difference {fraction}")
+        print(f"Error bound: {1+self.e}")
+        print(f"Passes: {np.array(fraction) < 1+self.e}")
+
+        return np.max(fraction)
+
+    def test(self):
+        w, f = self.find_continous_weights()
+        fraction = self.compare_weights(w)
+
+        # Original old test uses intercept of classifier in extracted prediction...
+        # Orginal test used 
+        self.benchmark_old(w,f)
+
+        return self.get_n_query(), fraction
 
 
 if __name__ == '__main__':
@@ -186,19 +222,32 @@ if __name__ == '__main__':
     X_test, y_test = load_svmlight_file('targets/targets/diabetes/test.scale', n_features=8)
     X_test  = X_test.todense().tolist()
 
-    deltas = (1, .1, .01, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7)
-    nq = []
-    for e in deltas:
+    epsilons = (0.5, .1, .01, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7)
+
+    # Data extracted 
+    num_queries = [] #Number of queries
+    w_fraction_errors = []
+    for e in epsilons:
         delta = 1.0 / 10000
-        print ('error bound=%f' % e)
 
+        # e defines the allowed error in the line search, finally giving us |w_est/w| <= 1+epsilon for each weight
+        # delta basically defines a bound on how close to 0 weights can be (not super important).
         ex = LordMeek(clf, (X_test, y_test), error=e, delta=delta)
-        ex.do()
-        
-        print ('nq=%d' % (ex.get_n_query()))
-        nq.append(ex.get_n_query())
 
-    plt.plot(nq, deltas)
-    plt.yscale("log")
+        nq, f = ex.test()
+        num_queries.append(nq)
+        w_fraction_errors.append(f)
+
+    # This plots the difference between 1+e and the biggest ration between w_i and estimated w_i
+    # Gives an upper bound on the ratio error of the weights
+    # Plotted as a fraction of 1+e, i.e interpreted as % of error bound
+    # If it is larger than 0, the estimation is within the bound, bigger is better
+    # 20% = largest weight error is still 20% better than allowed error 
+    epsilon_frac = 1+ np.array(epsilons)
+    plt.plot(epsilons,(epsilon_frac - w_fraction_errors) / epsilon_frac * 100)
+    plt.xscale("log")
+    plt.title("Upper bound on weight error")
+    plt.xlabel("Epsilon [-]")
+    plt.ylabel("Relative error gap [%]")
 
     plt.show()
