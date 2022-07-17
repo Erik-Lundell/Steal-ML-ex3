@@ -208,6 +208,39 @@ class LordMeek(OnlineBase):
         self.benchmark_old(w,f)
 
         return self.get_n_query(), fraction
+    
+    def learn_intercept(self, Xs,ys,w,f):
+
+        best_intercept=-3
+        best_sum=-1
+        for b in range(-200,200,5):
+            sum_right=0
+    
+            for i,X in enumerate(Xs):
+                X = np.reshape(X,(1,-1))
+                extracted_y = self.POS if (np.inner(w, X)+(b/100)) > 0 else self.NEG
+                sum_right+= extracted_y==ys[i]
+                
+            if sum_right>best_sum:
+                print(best_sum)
+                best_sum=sum_right
+                best_intercept=b/100
+            
+        print(best_intercept)
+        return best_intercept
+
+    def predict(self, X, w, f, b):
+        b = self.clf1.intercept_ / self.clf1.coef_[0][f]
+
+        X = np.reshape(X,(1,-1))
+        
+
+        print(np.inner(w, X))
+        extracted_y = self.POS if np.inner(w, X)+b > 0 else self.NEG
+        
+        print(extracted_y)
+        
+        return extracted_y
 
 
 if __name__ == '__main__':
