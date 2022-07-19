@@ -244,11 +244,19 @@ if __name__ == '__main__':
     # Plotted as a fraction of 1+e, i.e interpreted as % of error bound
     # If it is larger than 0, the estimation is within the bound, bigger is better
     # 20% = largest weight error is still 20% better than allowed error 
+    
     epsilon_frac = 1+ np.array(epsilons)
     plt.plot(epsilons,(epsilon_frac - w_fraction_errors) / epsilon_frac * 100)
     plt.xscale("log")
     plt.title("Upper bound on weight error")
     plt.xlabel("Epsilon [-]")
     plt.ylabel("Relative error gap [%]")
+    '''
+    plt.plot(epsilons,num_queries)
+    plt.title("Number of queries needed to reach error bound")
+    plt.xlabel("Epsilon [-]")
+    plt.xscale("log")
+    plt.ylabel("Number of queries [-]")
+    '''
 
     plt.show()
